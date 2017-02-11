@@ -2,8 +2,9 @@
 - check out the project: ``git clone https://github.com/kenix/news-analyser.git``
 - within project folder: ``./gradlew clean build``
 - run analyser with: ``java -cp 'build/libs/*' com.example.news.analyser.Analyser 8080``
-- run feed with: ``java -cp 'build/libs/*' com.example.news.feed.Feed localhost 8080``
-- run feed with news population rate in milliseconds: ``java -cp 'build/libs/*' -DnewsPopRateInMillis=200 com.example.news.feed.Feed localhost 8080``
+- run feed with: ``java -cp 'build/libs/*' com.example.news.feed.NewsUnicaster localhost 8080``
+- run feed with news population rate in milliseconds:
+ ``java -cp 'build/libs/*' -DnewsProducingRateInMillis=200 com.example.news.feed.NewsUnicaster localhost 8080``
 
 ###Note
 - no 3rd-party dependency for runtime except Java SE 8 and this project's classes

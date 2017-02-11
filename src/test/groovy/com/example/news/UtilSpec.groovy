@@ -1,7 +1,7 @@
 package com.example.news
 
 import com.example.news.domain.News
-import com.example.news.feed.Feed
+import com.example.news.feed.NewsSupplier
 import spock.lang.Specification
 
 import java.nio.ByteBuffer
@@ -23,7 +23,7 @@ class UtilSpec extends Specification {
 
     def 'news encoding and parsing'() {
         when: 'creating a news with priority 3 and all possible headlines'
-        def news = new News(3, Feed.HEADLINES as List)
+        def news = new News(3, NewsSupplier.HEADLINES as List)
         and: 'byte buffer with size of 255'
         def buf = ByteBuffer.allocate(Util.MAX_NEWS_LENGTH)
         and: 'encoding this news into this byte buffer'
