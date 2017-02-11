@@ -18,7 +18,9 @@
 - algorithm for populating news of higher priority with less probability
 - concurrent priority queue
 - refactor selector code into different server or client implementations
-- pool news, bytes or use Unsafe (off-heap) to reduce GC stress
+- refactor analysing and feeding task into their own workers
+- other queue and rejection strategies
+- pool news, bytes or use Unsafe (off-heap) to reduce GC stress 
 - concurrent tests
 
 ###Task description
