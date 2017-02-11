@@ -1,26 +1,26 @@
 ###Usage
 - check out the project: ``git clone https://github.com/kenix/news-analyser.git``
 - within project folder: ``./gradlew clean build``
-- run analyser with: ``java -cp 'build/libs/*' com.example.news.analyser.NewsReceiver 8080``
-- run feed with: ``java -cp 'build/libs/*' com.example.news.feed.NewsUnicaster localhost 8080``
-- run feed with news population rate in milliseconds:
+- run mock news analyser with: ``java -cp 'build/libs/*' com.example.news.analyser.NewsReceiver 8080``
+- run mock news feed with: ``java -cp 'build/libs/*' com.example.news.feed.NewsUnicaster localhost 8080``
+- run mock news feed with news producing rate in milliseconds:
  ``java -cp 'build/libs/*' -DnewsProducingRateInMillis=200 com.example.news.feed.NewsUnicaster localhost 8080``
 
 ###Note
 - no 3rd-party dependency for runtime except Java SE 8 and this project's classes
 - test dependency on groovy and spock
-- analyser-server is implemented as a single threaded selector non-blocking server, could be easily extended using
+- news receiver is a single threaded selector non-blocking server, could be easily extended using
  executor service. One thread can already handle lots of traffic.
-- analyser's thread pool executor configured with bounded queue and discarding rejection policy.
-- feed-client has a bounded queue with default size 32. News will be dropped if more are populated than being able to be
- sent off the wire or queued. Change this queue size with ``-DnewsQueueSize``
+- news analyser is configured with bounded queue and discarding news policy.
+- news unicaster has a bounded queue with default size 32. News production will be blocked if this queue is full
+ (not being able to be sent off wire). Change this queue size with ``-DnewsQueueSize``
  
 ####To improve
-- [ ] algorithm for populating news of higher priority with less probability
+- [ ] algorithm for producing news of higher priority with less probability
 - [ ] concurrent priority queue
 - [ ] refactor selector code into different server or client implementations
 - [x] refactor analysing and feeding task into their own workers
-- [ ] other queue and rejection strategies
+- [x] other queue and rejection strategies
 - [ ] pool news, bytes or use Unsafe (off-heap) to reduce GC stress 
 - [ ] concurrent tests
 

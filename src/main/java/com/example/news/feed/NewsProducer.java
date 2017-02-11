@@ -17,7 +17,9 @@ import java.util.function.Supplier;
 class NewsProducer implements Runnable {
 
     private final BlockingQueue<byte[]> queue;
+
     private final Supplier<News> supplier;
+
     private final ByteBuffer buffer;
 
     NewsProducer(BlockingQueue<byte[]> queue, Supplier<News> supplier) {
@@ -33,6 +35,7 @@ class NewsProducer implements Runnable {
         Util.encodeNews(this.buffer, news);
         this.buffer.flip();
         try {
+            // blocking if queue is full
             this.queue.put(Arrays.copyOfRange(this.buffer.array(), 0, this.buffer.limit()));
         } catch (InterruptedException e) {
             Util.warn("producing news interrupted, %s", e.getMessage());
