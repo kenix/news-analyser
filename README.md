@@ -1,7 +1,7 @@
 ###Usage
 - check out the project: ``git clone https://github.com/kenix/news-analyser.git``
 - within project folder: ``./gradlew clean build``
-- run analyser with: ``java -cp 'build/libs/*' com.example.news.analyser.Analyser 8080``
+- run analyser with: ``java -cp 'build/libs/*' com.example.news.analyser.NewsReceiver 8080``
 - run feed with: ``java -cp 'build/libs/*' com.example.news.feed.NewsUnicaster localhost 8080``
 - run feed with news population rate in milliseconds:
  ``java -cp 'build/libs/*' -DnewsProducingRateInMillis=200 com.example.news.feed.NewsUnicaster localhost 8080``
@@ -19,7 +19,7 @@
 - algorithm for populating news of higher priority with less probability
 - concurrent priority queue
 - refactor selector code into different server or client implementations
-- refactor analysing and feeding task into their own workers
+- refactor analysing and feeding task into their own workers [x]
 - other queue and rejection strategies
 - pool news, bytes or use Unsafe (off-heap) to reduce GC stress 
 - concurrent tests
