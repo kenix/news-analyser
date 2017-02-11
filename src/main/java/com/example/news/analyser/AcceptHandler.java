@@ -29,7 +29,7 @@ public class AcceptHandler implements Handler<SelectionKey, IOException> {
         final SocketChannel sc = ssc.accept();
         Util.debug("<AcceptHandler> from %s", sc.getRemoteAddress());
         sc.configureBlocking(false);
-        this.bufByChannel.put(sc, ByteBuffer.allocate(1024 * 8));
+        this.bufByChannel.put(sc, ByteBuffer.allocateDirect(Util.DEFAULT_BUF_LENGTH));
         sc.register(key.selector(), SelectionKey.OP_READ);
     }
 }

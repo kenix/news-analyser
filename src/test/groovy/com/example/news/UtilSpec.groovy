@@ -25,7 +25,7 @@ class UtilSpec extends Specification {
         when: 'creating a news with priority 3 and all possible headlines'
         def news = new News(3, Feed.HEADLINES as List)
         and: 'byte buffer with size of 255'
-        def buf = ByteBuffer.allocate(255)
+        def buf = ByteBuffer.allocate(Util.MAX_NEWS_LENGTH)
         and: 'encoding this news into this byte buffer'
         def len = Util.encodeNews(buf, news)
         then: 'the news is correctly encoded'

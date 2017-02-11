@@ -17,19 +17,21 @@ import java.util.concurrent.TimeUnit;
 /**
  * @author zzhao
  */
-public class Util {
-
-    public static final DateTimeFormatter DTF = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
+public final class Util {
 
     public static final int MAX_NEWS_LENGTH = 255;
 
+    public static final int DEFAULT_BUF_LENGTH = 1024 * 4;
+
     public enum LogLevel {DEBUG, INFO, WARN, ERROR}
+
+    private static final DateTimeFormatter DTF = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
 
     private Util() {
         throw new AssertionError("not for instantiation or inheritance");
     }
 
-    public static void log(LogLevel logLevel, String msg) {
+    private static void log(LogLevel logLevel, String msg) {
         System.out.printf("%5s %s [%16s] %s%n", logLevel.name(), DTF.format(LocalDateTime.now()),
                 Thread.currentThread().getName(), msg);
     }
@@ -50,6 +52,18 @@ public class Util {
         log(LogLevel.ERROR, String.format(format, objs));
     }
 
+    /**
+     * Encoding length:
+     * <ol>
+     * <li>1 byte for total length</li>
+     * <li>1 byte for priority</li>
+     * <li>1 byte for headline count</li>
+     * <li>for each headline: 1 byte for headline length plus the headline itself</li>
+     * </ol>
+     *
+     * @param news
+     * @return encoding length for the given news in number of bytes
+     */
     public static int encodingLength(News news) {
         return 1// 1 byte for total length
                 + 1 // 1 byte for priority
@@ -61,6 +75,21 @@ public class Util {
                 .sum(); // n bytes for total headline length
     }
 
+    /**
+     * Encoding schema:
+     * <pre>
+     *     [total length of news] - 1 byte
+     *     [news priority] - 1 byte
+     *     [headline counts] - 1 byte
+     *     for each headline:
+     *          [headline length] - 1 byte
+     *          [headline] - (headline length) bytes
+     * </pre>
+     *
+     * @param buf
+     * @param news
+     * @return encoding length of the given news, 0 if the given buf cannot hold the given news
+     */
     public static int encodeNews(ByteBuffer buf, News news) {
         final int length = encodingLength(news);
         if (buf.remaining() < length) {
@@ -82,6 +111,12 @@ public class Util {
         return length;
     }
 
+    /**
+     * Parse a news object from the given buf if possible.
+     *
+     * @param buf
+     * @return a news optional, empty if no news can be parsed from the given buf
+     */
     public static Optional<News> parseNews(ByteBuffer buf) {
         if (!buf.hasRemaining()) {
             return Optional.empty();

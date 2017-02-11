@@ -64,7 +64,7 @@ public class Feed implements Closeable {
             }
 
             feed.start(sc.getLocalAddress().toString());
-            final ByteBuffer buf = ByteBuffer.allocateDirect(1024 * 8);
+            final ByteBuffer buf = ByteBuffer.allocateDirect(Util.DEFAULT_BUF_LENGTH);
 
             while (true) {
                 if (selector.select(2000) == 0) {
