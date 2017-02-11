@@ -16,13 +16,13 @@
  sent off the wire or queued. Change this queue size with ``-DnewsQueueSize``
  
 ####To improve
-- [ ]algorithm for populating news of higher priority with less probability
-- [ ]concurrent priority queue
-- [ ]refactor selector code into different server or client implementations
-- [x]refactor analysing and feeding task into their own workers
-- [ ]other queue and rejection strategies
-- [ ]pool news, bytes or use Unsafe (off-heap) to reduce GC stress 
-- [ ]concurrent tests
+- [ ] algorithm for populating news of higher priority with less probability
+- [ ] concurrent priority queue
+- [ ] refactor selector code into different server or client implementations
+- [x] refactor analysing and feeding task into their own workers
+- [ ] other queue and rejection strategies
+- [ ] pool news, bytes or use Unsafe (off-heap) to reduce GC stress 
+- [ ] concurrent tests
 
 ###Task description
 The task involves the development of two separate Java SE 8 programs: a "mock news feed" and a "news analyser". Several instances of the mock news feed will be run simultaneously, each connecting to the same news analyser.
