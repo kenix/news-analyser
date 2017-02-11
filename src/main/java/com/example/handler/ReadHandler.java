@@ -1,7 +1,7 @@
 /*
 * Created at 19:37 on 10/02/2017
 */
-package com.example.news.analyser;
+package com.example.handler;
 
 import com.example.news.Util;
 
@@ -10,6 +10,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 import java.util.Map;
+import java.util.function.Consumer;
 
 /**
  * @author zzhao
@@ -18,11 +19,11 @@ public class ReadHandler implements Handler<SelectionKey, IOException> {
 
     private final Map<SocketChannel, ByteBuffer> bufByChannel;
 
-    private final Analyser analyser;
+    private final Consumer<ByteBuffer> consumer;
 
-    public ReadHandler(Map<SocketChannel, ByteBuffer> bufByChannel, Analyser analyser) {
+    public ReadHandler(Map<SocketChannel, ByteBuffer> bufByChannel, Consumer<ByteBuffer> consumer) {
         this.bufByChannel = bufByChannel;
-        this.analyser = analyser;
+        this.consumer = consumer;
     }
 
     @Override
@@ -39,7 +40,7 @@ public class ReadHandler implements Handler<SelectionKey, IOException> {
             return;
         }
         if (read > 0) {
-            this.analyser.analyse(sc, buf);
+            this.consumer.accept(buf);
         }
         key.interestOps(SelectionKey.OP_READ);
     }

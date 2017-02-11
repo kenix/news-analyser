@@ -17,6 +17,8 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeoutException;
 
+import static com.example.news.Util.getIntConfig;
+
 /**
  * @author zzhao
  */
@@ -105,9 +107,5 @@ public class NewsUnicaster {
         final SelectionKey key = it.next();
         it.remove();
         return key;
-    }
-
-    private static int getIntConfig(String name, int defaultVal) {
-        return Integer.parseInt(System.getProperty(name, String.valueOf(defaultVal)));
     }
 }

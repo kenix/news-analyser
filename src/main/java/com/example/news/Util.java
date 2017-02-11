@@ -31,6 +31,10 @@ public final class Util {
         throw new AssertionError("not for instantiation or inheritance");
     }
 
+    public static int getIntConfig(String name, int def) {
+        return Integer.parseInt(System.getProperty(name, String.valueOf(def)));
+    }
+
     private static void log(LogLevel logLevel, String msg) {
         System.out.printf("%5s %s [%16s] %s%n", logLevel.name(), DTF.format(LocalDateTime.now()),
                 Thread.currentThread().getName(), msg);

@@ -1,7 +1,7 @@
 /*
 * Created at 04:22 on 11/02/2017
 */
-package com.example.news.analyser;
+package com.example.handler;
 
 /**
  * @author zzhao

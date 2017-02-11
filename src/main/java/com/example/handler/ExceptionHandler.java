@@ -1,7 +1,7 @@
 /*
 * Created at 04:24 on 11/02/2017
 */
-package com.example.news.analyser;
+package com.example.handler;
 
 import com.example.news.Util;
 
