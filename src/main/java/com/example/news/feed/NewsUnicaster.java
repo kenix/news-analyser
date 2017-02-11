@@ -3,6 +3,9 @@
 */
 package com.example.news.feed;
 
+import com.example.handler.ExceptionHandler;
+import com.example.handler.Handler;
+import com.example.handler.WriteHandler;
 import com.example.news.Util;
 
 import java.io.IOException;
@@ -12,7 +15,6 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.util.Iterator;
-import java.util.Queue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeoutException;
@@ -26,7 +28,7 @@ public class NewsUnicaster {
 
     public static void main(String[] args) throws Exception {
         if (args.length < 2) {
-            System.out.println("Usage: <peer host name> <port>");
+            System.out.println("Usage: <peer host name or IP> <port>");
             System.exit(1);
         }
         final String hostName = args[0];
@@ -60,7 +62,11 @@ public class NewsUnicaster {
             }
 
             feed.start(sc.getLocalAddress().toString());
-            final ByteBuffer buf = ByteBuffer.allocateDirect(Util.DEFAULT_BUF_LENGTH);
+            final Handler<SelectionKey, IOException> writeHandler =
+                    new ExceptionHandler<>(new WriteHandler(buf -> takeNews(buf, queue)),
+                            (s, x) -> { // just break the loop and stop unicaster
+                                throw new IllegalStateException(x.getMessage());
+                            });
 
             while (true) {
                 if (selector.select(2000) == 0) {
@@ -69,35 +75,19 @@ public class NewsUnicaster {
                 }
                 final SelectionKey key = getTheSelectionKey(selector);
                 if (key.isWritable()) {
-                    sendNews(key, buf, queue);
+                    writeHandler.handle(key);
                 }
             }
         }
     }
 
-    private static void sendNews(SelectionKey key, ByteBuffer buf, Queue<byte[]> newsPool) throws IOException {
-        takeNews(buf, newsPool);
-        wireNews(key, buf);
-
-        key.interestOps(SelectionKey.OP_WRITE);
-    }
-
-    private static void wireNews(SelectionKey key, ByteBuffer buf) throws IOException {
-        buf.flip();
-        final SocketChannel sc = (SocketChannel) key.channel();
-        while (buf.hasRemaining()) {
-            sc.write(buf);
-        }
-        buf.clear();
-    }
-
-    private static void takeNews(ByteBuffer buf, Queue<byte[]> newsPool) {
+    private static void takeNews(ByteBuffer buf, BlockingQueue<byte[]> queue) {
         byte[] bytes;
         do {
-            bytes = newsPool.peek();
+            bytes = queue.peek();
             if (bytes != null && buf.remaining() >= bytes.length) {
                 buf.put(bytes);
-                newsPool.remove();
+                queue.remove();
             }
         } while (bytes != null && buf.remaining() >= bytes.length);
     }
