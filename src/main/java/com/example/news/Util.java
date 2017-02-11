@@ -30,7 +30,7 @@ public class Util {
     }
 
     public static void log(LogLevel logLevel, String msg) {
-        System.out.printf("%s %s [%16s] %s%n", logLevel.name(), DTF.format(LocalDateTime.now()),
+        System.out.printf("%5s %s [%16s] %s%n", logLevel.name(), DTF.format(LocalDateTime.now()),
                 Thread.currentThread().getName(), msg);
     }
 
