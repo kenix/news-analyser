@@ -108,7 +108,7 @@ public class Analyser implements Closeable {
         return prioQueueForExchange;
     }
 
-    void inspect() {
+    void inspect() { // not necessary to synchronize (count and queue) with analysing, results won't differ much
         Util.info("Positive news in the last 10s: %d", this.positiveNewsCount.getAndSet(0));
 
         final PriorityBlockingQueue<News> queue = this.prioQueueRef.getAndSet(this.prioQueueForExchange);
