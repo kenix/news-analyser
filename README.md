@@ -6,6 +6,8 @@
 - run feed with news population rate in milliseconds: ``java -cp 'build/libs/*' -DnewsPopRateInMillis=200 com.example.news.feed.Feed localhost 8080``
 
 ###Note
+- no 3rd-party dependency for runtime except Java SE 8 and this project's classes
+- test dependency on groovy and spock
 - analyser-server is implemented as a single threaded selector non-blocking server, could be easily extended using
  executor service. One thread can already handle lots of traffic.
 - analyser's thread pool executor configured with bounded queue and discarding rejection policy.
