@@ -35,8 +35,10 @@ public class ReadHandler implements Handler<SelectionKey, IOException> {
         }
         int read = sc.read(buf);
         if (read == -1) { // channel end
-            this.bufByChannel.remove(sc);
             Util.debug("<ReadHandler> end %s", sc.getRemoteAddress());
+            this.bufByChannel.remove(sc);
+            sc.close();
+            key.cancel();
             return;
         }
         if (read > 0) {

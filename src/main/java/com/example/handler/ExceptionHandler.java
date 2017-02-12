@@ -20,7 +20,10 @@ public class ExceptionHandler<S, X extends Throwable> extends DecoratingHandler<
     }
 
     public ExceptionHandler(Handler<S, X> handler) {
-        this(handler, (s, x) -> Util.error("%s: %s", s, x));
+        this(handler, (s, x) -> {
+            Util.error("%s: %s", s, x);
+            x.printStackTrace();
+        });
     }
 
     @Override
