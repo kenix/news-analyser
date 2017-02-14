@@ -19,9 +19,10 @@
 ####To improve
 - [ ] algorithm for producing news of higher priority with less probability
 - [ ] concurrent priority queue
-- [ ] refactor selector code into different server or client implementations
+- [ ] refactor selector code into different server or client implementations supporting application protocols
 - [x] refactor analysing and feeding task into their own workers
 - [x] other queue and rejection strategies
+- [ ] encapsulate feed and analysing code into protocol implementations
 - [ ] pool news, bytes or use Unsafe (off-heap) to reduce GC stress 
 - [ ] concurrent tests
 
