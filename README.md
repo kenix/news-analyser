@@ -14,6 +14,7 @@
 - news analyser is configured with bounded queue and discarding news policy.
 - news unicaster has a bounded queue with default size 32. News production will be blocked if this queue is full
  (not being able to be sent off wire). Change this queue size with ``-DnewsQueueSize``
+- no specific charset is used for encoding Strings. Encoding scheme of a new's message is open.
  
 ####To improve
 - [ ] algorithm for producing news of higher priority with less probability
