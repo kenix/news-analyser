@@ -28,6 +28,7 @@ class NewsFeed implements Closeable {
     }
 
     void start(String feedAddr) {
+        // if news creation is slow and producing rate is high, must tune the config of scheduler
         this.scheduler = Executors.newSingleThreadScheduledExecutor(r -> new Thread(r, "f" + feedAddr));
         this.scheduler.scheduleAtFixedRate(this.newsProducer, 100,
                 this.newsProducingRateInMillis, TimeUnit.MILLISECONDS);
