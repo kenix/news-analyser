@@ -6,8 +6,11 @@ package com.example.news.feed;
 import com.example.news.domain.News;
 
 import java.security.SecureRandom;
-import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * @author zzhao
@@ -20,8 +23,14 @@ public class NewsSupplier implements Supplier<News> {
 
     private final SecureRandom random;
 
+    private final List<Integer> headlineIndices;
+
     NewsSupplier() {
         this.random = new SecureRandom(String.valueOf(System.nanoTime()).getBytes());
+        this.headlineIndices = IntStream
+                .range(0, HEADLINES.length)
+                .mapToObj(Integer::valueOf)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -31,12 +40,12 @@ public class NewsSupplier implements Supplier<News> {
                 ? oneFrom100 % 5 + 5
                 : oneFrom100 % 5;
 
-        final int headlineCount = this.random.nextInt(3) + 3; // 3 to 5
-        final ArrayList<String> headlines = new ArrayList<>(headlineCount);
-        for (int i = 0; i < headlineCount; i++) {
-            headlines.add(HEADLINES[this.random.nextInt(HEADLINES.length)]); // could have duplicate headlines
-        }
-
-        return new News(priority, headlines);
+        Collections.shuffle(this.headlineIndices);
+        return new News(priority,
+                this.headlineIndices
+                        .subList(0, this.random.nextInt(3) + 3)
+                        .stream()
+                        .map(i -> HEADLINES[i])
+                        .collect(Collectors.toList()));
     }
 }
