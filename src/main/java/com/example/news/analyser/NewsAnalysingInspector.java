@@ -24,17 +24,15 @@ import java.util.function.Consumer;
  */
 class NewsAnalysingInspector implements Consumer<News>, Closeable {
 
-    private final AtomicLong newsCounter = new AtomicLong(0);
+    private final AtomicReference<InspectorContext> contextRef;
 
-    private final AtomicReference<PriorityBlockingQueue<News>> prioQueueRef = new AtomicReference<>();
-
-    private PriorityBlockingQueue<News> prioQueueForExchange;
+    private InspectorContext contextForExchange;
 
     private ScheduledExecutorService scheduler;
 
-    NewsAnalysingInspector() {
-        this.prioQueueRef.set(new PriorityBlockingQueue<>());
-        this.prioQueueForExchange = new PriorityBlockingQueue<>();
+    NewsAnalysingInspector(int numOfTopNewsToKeep) {
+        this.contextRef = new AtomicReference<>(new InspectorContext(numOfTopNewsToKeep));
+        this.contextForExchange = new InspectorContext(numOfTopNewsToKeep);
     }
 
     void start() {
@@ -42,15 +40,18 @@ class NewsAnalysingInspector implements Consumer<News>, Closeable {
         this.scheduler.scheduleAtFixedRate(this::inspect, 10, 10, TimeUnit.SECONDS);
     }
 
-    void inspect() { // not necessary to synchronize (count and queue) with analysing, results won't differ much
-        Util.info("Positive news [last 10s]: %d", this.newsCounter.getAndSet(0));
+    void inspect() {
+        final InspectorContext ctx = this.contextRef.getAndSet(this.contextForExchange);
 
-        final PriorityBlockingQueue<News> queue = this.prioQueueRef.getAndSet(this.prioQueueForExchange);
-        final News[] newsArray = toReverseSortedNewsArray(queue);
-        Arrays.stream(newsArray).limit(3).forEach(news -> Util.info("Top prio news: %s", news));
+        Util.info("Positive news last 10s: %d", ctx.getNewsCounter().get());
+        final News[] newsArray = toReverseSortedNewsArray(ctx.getPrioQueue());
+        Arrays
+                .stream(newsArray)
+                .limit(ctx.getNumOfTopNewsTopKeep())
+                .distinct()
+                .forEach(news -> Util.info("Top prio news: %s", news));
 
-        queue.clear();
-        this.prioQueueForExchange = queue;
+        this.contextForExchange = ctx.reset();
     }
 
     static News[] toReverseSortedNewsArray(Collection<News> queue) {
@@ -59,34 +60,58 @@ class NewsAnalysingInspector implements Consumer<News>, Closeable {
         return newsArray;
     }
 
-    AtomicLong getNewsCounter() {
-        return newsCounter;
-    }
-
-    AtomicReference<PriorityBlockingQueue<News>> getPrioQueueRef() {
-        return prioQueueRef;
-    }
-
-    PriorityBlockingQueue<News> getPrioQueueForExchange() {
-        return prioQueueForExchange;
-    }
-
     @Override
     public void accept(News news) {
-        this.newsCounter.incrementAndGet();
-        final PriorityBlockingQueue<News> priorityQueue = this.prioQueueRef.get();
-        if (priorityQueue.size() < 3) { // parameterize number of top news
-            priorityQueue.offer(news);
-        } else {
-            if (news.compareTo(priorityQueue.peek()) > 0) {
-                priorityQueue.remove();
-                priorityQueue.offer(news);
-            }
-        }
+        this.contextRef.get().accept(news);
     }
 
     @Override
     public void close() throws IOException {
         Util.shutdownAndAwaitTermination(this.scheduler, 5);
+    }
+
+    static class InspectorContext implements Consumer<News> {
+        private final AtomicLong newsCounter;
+        private final PriorityBlockingQueue<News> prioQueue;
+        private final int numOfTopNewsTopKeep;
+
+        InspectorContext(int topNewsToKeep) {
+            this.numOfTopNewsTopKeep = topNewsToKeep;
+            this.newsCounter = new AtomicLong(0);
+            this.prioQueue = new PriorityBlockingQueue<>();
+        }
+
+        AtomicLong getNewsCounter() {
+            return newsCounter;
+        }
+
+        PriorityBlockingQueue<News> getPrioQueue() {
+            return prioQueue;
+        }
+
+        public int getNumOfTopNewsTopKeep() {
+            return numOfTopNewsTopKeep;
+        }
+
+        @Override
+        public void accept(News news) {
+            // not necessary to synchronize (count and queue) with analysing, results won't differ much
+            this.newsCounter.incrementAndGet();
+            // concurrent ops could result in more than 3 elements in the queue and possibly duplicate
+            if (this.prioQueue.size() < this.numOfTopNewsTopKeep) { // parameterize number of top news
+                this.prioQueue.offer(news);
+            } else {
+                if (news.compareTo(this.prioQueue.peek()) > 0) {
+                    this.prioQueue.remove();
+                    this.prioQueue.offer(news);
+                }
+            }
+        }
+
+        InspectorContext reset() {
+            this.newsCounter.set(0);
+            this.prioQueue.clear();
+            return this;
+        }
     }
 }

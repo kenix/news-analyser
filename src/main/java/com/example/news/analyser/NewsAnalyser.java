@@ -33,7 +33,7 @@ public class NewsAnalyser implements Closeable, Consumer<News> {
     public NewsAnalyser(int numberOfWorkers) {
         this.numberOfWorkers = numberOfWorkers;
         this.queue = new LinkedBlockingQueue<>(1024);
-        this.inspector = new NewsAnalysingInspector();
+        this.inspector = new NewsAnalysingInspector(3);
     }
 
     void start() {

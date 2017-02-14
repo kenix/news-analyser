@@ -36,7 +36,7 @@ class NewsAnalysingInspectorSpec extends Specification {
 
     def 'inspect news'() {
         given: 'a news analysing inspector'
-        def inspector = new NewsAnalysingInspector()
+        def inspector = new NewsAnalysingInspector(3)
 
         when: 'accepting 5 news'
         inspector.accept(new News(1, ['down', 'down', 'down']))
@@ -44,20 +44,21 @@ class NewsAnalysingInspectorSpec extends Specification {
         inspector.accept(new News(3, ['up', 'up', 'down']))
         inspector.accept(new News(4, ['up', 'up', 'up']))
         inspector.accept(new News(5, ['up', 'up', 'down', 'down']))
-        then: 'the analyser counted the news correctly'
-        inspector.newsCounter.get() == 5L
-        and: 'only retained top 3 news'
-        inspector.prioQueueRef.get().size() == 3
-        and: 'the prio queue for exchange between inspecting and analysing threads is empty'
-        !inspector.prioQueueForExchange.size()
+        then: "the analyser' inspector context counted the news correctly"
+        inspector.contextRef.get().newsCounter.get() == 5L
+        and: 'only retained the top 3 news'
+        inspector.contextRef.get().prioQueue.size() == 3
+        and: 'the inspector context for exchange between inspecting and analysing threads is empty'
+        !inspector.contextForExchange.newsCounter.get()
+        inspector.contextForExchange.prioQueue.isEmpty()
 
         when: 'the analyser inspects the statistics'
         inspector.inspect()
-        then: "the analyser's counter for news is reset"
-        !inspector.newsCounter.get()
-        and: 'the prio queue is empty after inspecting without parallel analysing'
-        !inspector.prioQueueRef.get().size()
-        and: 'the prio queue for exchange between inspecting and analysing threads is reset'
-        !inspector.prioQueueForExchange.size()
+        then: "the analyser's inspector context is reset"
+        !inspector.contextRef.get().newsCounter.get()
+        inspector.contextRef.get().prioQueue.isEmpty()
+        and: "the inspector context for exchange is empty after inspecting without parallel analysing"
+        !inspector.contextForExchange.newsCounter.get()
+        inspector.contextForExchange.prioQueue.isEmpty()
     }
 }

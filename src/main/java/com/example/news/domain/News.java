@@ -3,6 +3,8 @@
 */
 package com.example.news.domain;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -14,9 +16,14 @@ public class News implements Comparable<News> {
 
     private final List<String> headlines;
 
+    // to reduce size just keep the sorted indices
+    private final List<String> sortedHeadlines;
+
     public News(int priority, List<String> headlines) {
         this.priority = priority;
         this.headlines = headlines;
+        this.sortedHeadlines = new ArrayList<>(headlines);
+        Collections.sort(this.sortedHeadlines);
     }
 
     public int getPriority() {
@@ -42,8 +49,8 @@ public class News implements Comparable<News> {
         if (result != 0) {
             return result;
         }
-        for (int i = 0; i < this.headlines.size(); i++) {
-            result = this.headlines.get(i).compareTo(that.headlines.get(i));
+        for (int i = 0; i < this.sortedHeadlines.size(); i++) {
+            result = this.sortedHeadlines.get(i).compareTo(that.sortedHeadlines.get(i));
             if (result != 0) {
                 return result;
             }

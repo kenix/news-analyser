@@ -49,7 +49,7 @@ public class NewsReceiver {
             ssc.configureBlocking(false);
             ssc.register(selector, SelectionKey.OP_ACCEPT);
             analyser.start();
-            Util.info("<NewsReceiver> ready for connections on %d", port);
+            Util.info("<NewsReceiver> listening on %d", port);
 
             while (true) {
                 selector.select();
