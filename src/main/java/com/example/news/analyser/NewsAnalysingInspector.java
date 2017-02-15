@@ -17,6 +17,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Consumer;
 
 /**
@@ -30,9 +31,16 @@ class NewsAnalysingInspector implements Consumer<News>, Closeable {
 
     private ScheduledExecutorService scheduler;
 
+    private final ReentrantReadWriteLock.ReadLock readLock;
+
+    private final ReentrantReadWriteLock.WriteLock writeLock;
+
     NewsAnalysingInspector(int numOfTopNewsToKeep) {
         this.contextRef = new AtomicReference<>(new InspectorContext(numOfTopNewsToKeep));
         this.contextForExchange = new InspectorContext(numOfTopNewsToKeep);
+        final ReentrantReadWriteLock lock = new ReentrantReadWriteLock(true);
+        this.readLock = lock.readLock();
+        this.writeLock = lock.writeLock();
     }
 
     void start() {
@@ -41,7 +49,12 @@ class NewsAnalysingInspector implements Consumer<News>, Closeable {
     }
 
     void inspect() {
-        final InspectorContext ctx = this.contextRef.getAndSet(this.contextForExchange);
+        // TODO find a clever way to avoid this locking: reference counting?
+        final InspectorContext ctx = exchangeContext();
+        if (ctx == null) {
+            Util.error("failed inspecting");
+            return;
+        }
 
         Util.info("Positive news last 10s: %d", ctx.getNewsCounter().get());
         final News[] newsArray = toReverseSortedNewsArray(ctx.getPrioQueue());
@@ -54,6 +67,23 @@ class NewsAnalysingInspector implements Consumer<News>, Closeable {
         this.contextForExchange = ctx.reset();
     }
 
+    private InspectorContext exchangeContext() {
+        try {
+            while (!this.writeLock.tryLock(1000, TimeUnit.MILLISECONDS)) {
+                Util.warn("delayed inspecting");
+            }
+            try {
+                return this.contextRef.getAndSet(this.contextForExchange);
+            } finally {
+                this.writeLock.unlock();
+            }
+        } catch (InterruptedException e) {
+            Util.warn("inspector inspecting interrupted %s", e.getMessage());
+            Thread.currentThread().interrupt();
+            return null;
+        }
+    }
+
     static News[] toReverseSortedNewsArray(Collection<News> queue) {
         final News[] newsArray = queue.toArray(new News[queue.size()]);
         Arrays.sort(newsArray, Comparator.reverseOrder());
@@ -62,7 +92,19 @@ class NewsAnalysingInspector implements Consumer<News>, Closeable {
 
     @Override
     public void accept(News news) {
-        this.contextRef.get().accept(news);
+        try {
+            while (!this.readLock.tryLock(50, TimeUnit.MILLISECONDS)) {
+                Util.warn("delayed accepting: %s", news);
+            }
+            try {
+                this.contextRef.get().accept(news);
+            } finally {
+                this.readLock.unlock();
+            }
+        } catch (InterruptedException e) {
+            Util.warn("inspector accepting interrupted %s", e.getMessage());
+            Thread.currentThread().interrupt();
+        }
     }
 
     @Override
@@ -89,7 +131,7 @@ class NewsAnalysingInspector implements Consumer<News>, Closeable {
             return prioQueue;
         }
 
-        public int getNumOfTopNewsTopKeep() {
+        int getNumOfTopNewsTopKeep() {
             return numOfTopNewsTopKeep;
         }
 
