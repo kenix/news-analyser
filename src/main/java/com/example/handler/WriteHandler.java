@@ -29,10 +29,10 @@ public class WriteHandler implements Handler<SelectionKey, IOException> {
         this.consumer.accept(this.buf);
         this.buf.flip();
         final SocketChannel sc = (SocketChannel) key.channel();
-        while (this.buf.hasRemaining()) {
+        if (this.buf.hasRemaining()) {
             sc.write(this.buf);
         }
-        this.buf.clear();
+        this.buf.compact();
 
         key.interestOps(SelectionKey.OP_WRITE);
     }
