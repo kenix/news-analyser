@@ -15,8 +15,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.atomic.LongAdder;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Consumer;
@@ -58,7 +58,7 @@ class NewsAnalysingInspector implements Consumer<News>, Closeable {
             return;
         }
 
-        Util.info("Positive news last 10s: %d", ctx.getNewsCounter().get());
+        Util.info("Positive news last 10s: %d", ctx.getNewsCounter().sum());
         final News[] newsArray = toReverseSortedNewsArray(ctx.getPrioQueue());
         Arrays
                 .stream(newsArray)
@@ -111,17 +111,17 @@ class NewsAnalysingInspector implements Consumer<News>, Closeable {
     }
 
     static class InspectorContext implements Consumer<News> {
-        private final AtomicLong newsCounter;
+        private final LongAdder newsCounter;
         private final PriorityBlockingQueue<News> prioQueue;
         private final int numOfTopNewsTopKeep;
 
         InspectorContext(int topNewsToKeep) {
             this.numOfTopNewsTopKeep = topNewsToKeep;
-            this.newsCounter = new AtomicLong(0);
+            this.newsCounter = new LongAdder();
             this.prioQueue = new PriorityBlockingQueue<>();
         }
 
-        AtomicLong getNewsCounter() {
+        LongAdder getNewsCounter() {
             return newsCounter;
         }
 
@@ -136,7 +136,7 @@ class NewsAnalysingInspector implements Consumer<News>, Closeable {
         @Override
         public void accept(News news) {
             // not necessary to synchronize (count and queue) with analysing, results won't differ much
-            this.newsCounter.incrementAndGet();
+            this.newsCounter.increment();
             // concurrent ops could result in more than 3 elements in the queue and possibly duplicate
             if (this.prioQueue.size() < this.numOfTopNewsTopKeep) { // parameterize number of top news
                 this.prioQueue.offer(news);
@@ -149,7 +149,7 @@ class NewsAnalysingInspector implements Consumer<News>, Closeable {
         }
 
         InspectorContext reset() {
-            this.newsCounter.set(0);
+            this.newsCounter.reset();
             this.prioQueue.clear();
             return this;
         }
