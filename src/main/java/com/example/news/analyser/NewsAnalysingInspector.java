@@ -17,8 +17,10 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 /**
  * @author zzhao
@@ -68,20 +70,8 @@ class NewsAnalysingInspector implements Consumer<News>, Closeable {
     }
 
     private InspectorContext exchangeContext() {
-        try {
-            while (!this.writeLock.tryLock(1000, TimeUnit.MILLISECONDS)) {
-                Util.warn("delayed inspecting");
-            }
-            try {
-                return this.contextRef.getAndSet(this.contextForExchange);
-            } finally {
-                this.writeLock.unlock();
-            }
-        } catch (InterruptedException e) {
-            Util.warn("inspector inspecting interrupted %s", e.getMessage());
-            Thread.currentThread().interrupt();
-            return null;
-        }
+        return doWithinLock(this.writeLock, 1000,
+                () -> this.contextRef.getAndSet(this.contextForExchange));
     }
 
     static News[] toReverseSortedNewsArray(Collection<News> queue) {
@@ -92,18 +82,26 @@ class NewsAnalysingInspector implements Consumer<News>, Closeable {
 
     @Override
     public void accept(News news) {
+        doWithinLock(this.readLock, 50, () -> {
+            this.contextRef.get().accept(news);
+            return null;
+        });
+    }
+
+    static <T> T doWithinLock(Lock lock, int timeoutMillis, Supplier<T> supplier) {
         try {
-            while (!this.readLock.tryLock(50, TimeUnit.MILLISECONDS)) {
-                Util.warn("delayed accepting: %s", news);
+            while (!lock.tryLock(timeoutMillis, TimeUnit.MILLISECONDS)) {
+                Util.warn("acquiring lock timeout");
             }
             try {
-                this.contextRef.get().accept(news);
+                return supplier.get();
             } finally {
-                this.readLock.unlock();
+                lock.unlock();
             }
         } catch (InterruptedException e) {
-            Util.warn("inspector accepting interrupted %s", e.getMessage());
+            Util.warn("acquiring lock interrupted %s", e.getMessage());
             Thread.currentThread().interrupt();
+            return null;
         }
     }
 
