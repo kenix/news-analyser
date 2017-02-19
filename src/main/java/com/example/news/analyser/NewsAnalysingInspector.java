@@ -3,7 +3,7 @@
 */
 package com.example.news.analyser;
 
-import com.example.news.Util;
+import com.example.Util;
 import com.example.news.domain.News;
 
 import java.io.Closeable;

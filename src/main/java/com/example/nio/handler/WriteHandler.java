@@ -1,9 +1,9 @@
 /*
 * Created at 23:32 on 11/02/2017
 */
-package com.example.handler;
+package com.example.nio.handler;
 
-import com.example.news.Util;
+import com.example.Util;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;

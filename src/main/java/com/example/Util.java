@@ -1,10 +1,11 @@
 /*
 * Created at 19:08 on 10/02/2017
 */
-package com.example.news;
+package com.example;
 
 import com.example.news.domain.News;
 
+import java.io.Closeable;
 import java.nio.ByteBuffer;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -29,6 +30,18 @@ public final class Util {
 
     private Util() {
         throw new AssertionError("not for instantiation or inheritance");
+    }
+
+    public static void close(Closeable closeable) {
+        if (closeable == null) {
+            return;
+        }
+        try {
+            closeable.close();
+        } catch (Exception e) {
+            error("failed closing resource %s", e.getMessage());
+            e.printStackTrace(System.err);
+        }
     }
 
     public static int getIntConfig(String name, int def) {

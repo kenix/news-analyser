@@ -3,10 +3,10 @@
 */
 package com.example.news.feed;
 
-import com.example.handler.ExceptionHandler;
-import com.example.handler.Handler;
-import com.example.handler.WriteHandler;
-import com.example.news.Util;
+import com.example.nio.handler.ExceptionHandler;
+import com.example.nio.handler.Handler;
+import com.example.nio.handler.WriteHandler;
+import com.example.Util;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -19,7 +19,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeoutException;
 
-import static com.example.news.Util.getIntConfig;
+import static com.example.Util.getIntConfig;
 
 /**
  * @author zzhao

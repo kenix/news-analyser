@@ -1,5 +1,6 @@
 package com.example.news
 
+import com.example.Util
 import com.example.news.domain.News
 import com.example.news.feed.NewsSupplier
 import spock.lang.Specification

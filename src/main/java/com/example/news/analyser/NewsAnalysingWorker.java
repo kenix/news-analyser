@@ -3,14 +3,13 @@
 */
 package com.example.news.analyser;
 
-import com.example.news.Util;
+import com.example.Util;
 import com.example.news.domain.News;
 
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
@@ -23,12 +22,12 @@ class NewsAnalysingWorker implements Runnable {
             "up", "rise", "good", "success", "high", "über"
     ));
 
-    private final BlockingQueue<News> queue;
+    private final NewsBroker newsBroker;
 
     private final Consumer<News> consumer;
 
-    NewsAnalysingWorker(BlockingQueue<News> queue, Consumer<News> consumer) {
-        this.queue = queue;
+    NewsAnalysingWorker(NewsBroker newsBroker, Consumer<News> consumer) {
+        this.newsBroker = newsBroker;
         this.consumer = consumer;
     }
 
@@ -36,7 +35,7 @@ class NewsAnalysingWorker implements Runnable {
     public void run() {
         while (true) {
             try {
-                final News news = this.queue.poll(1000, TimeUnit.MILLISECONDS);
+                final News news = this.newsBroker.poll(1000, TimeUnit.MILLISECONDS);
                 if (news != null && isPositiveNews(news)) {
                     this.consumer.accept(news);
                 }

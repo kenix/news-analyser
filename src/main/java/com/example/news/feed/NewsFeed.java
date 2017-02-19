@@ -3,7 +3,7 @@
 */
 package com.example.news.feed;
 
-import com.example.news.Util;
+import com.example.Util;
 
 import java.io.Closeable;
 import java.io.IOException;
