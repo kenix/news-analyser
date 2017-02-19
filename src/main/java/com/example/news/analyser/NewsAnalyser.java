@@ -36,7 +36,8 @@ public class NewsAnalyser implements NioTcpProtocol.Server {
     private ExecutorService executorService;
 
     public NewsAnalyser(int numberOfWorkers) {
-        this.acceptHandler = new ExceptionHandler<>(new AcceptHandler(Util.DEFAULT_BUF_LENGTH));
+        this.acceptHandler = new ExceptionHandler<>(new AcceptHandler(
+                () -> NioContext.onlyRead(Util.DEFAULT_BUF_LENGTH)));
         this.newsBroker = new NewsBroker();
         this.readHandler = new ExceptionHandler<>(new ReadHandler(new NewsAssembler(this.newsBroker)));
         this.numberOfWorkers = numberOfWorkers;
@@ -65,7 +66,7 @@ public class NewsAnalyser implements NioTcpProtocol.Server {
 
     @Override
     public void handleWrite(SelectionKey selectionKey) throws IOException {
-        // doesn't care
+        throw new UnsupportedOperationException();
     }
 
     @Override

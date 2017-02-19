@@ -10,16 +10,17 @@ import java.io.IOException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
+import java.util.function.Supplier;
 
 /**
  * @author zzhao
  */
 public class AcceptHandler implements Handler<SelectionKey, IOException> {
 
-    private final int bufferSize;
+    private final Supplier<NioContext> supplier;
 
-    public AcceptHandler(int bufferSize) {
-        this.bufferSize = bufferSize;
+    public AcceptHandler(Supplier<NioContext> supplier) {
+        this.supplier = supplier;
     }
 
     @Override
@@ -29,7 +30,8 @@ public class AcceptHandler implements Handler<SelectionKey, IOException> {
         sc.configureBlocking(false);
         Util.debug("<AcceptHandler> from %s", sc.getRemoteAddress());
 
-        final SelectionKey clientKey = sc.register(key.selector(), SelectionKey.OP_READ);
-        clientKey.attach(new NioContext(this.bufferSize));
+        final NioContext nioContext = this.supplier.get();
+        final SelectionKey clientKey = sc.register(key.selector(), nioContext.getInterestOps());
+        clientKey.attach(nioContext);
     }
 }

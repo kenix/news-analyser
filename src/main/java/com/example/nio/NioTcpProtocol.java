@@ -21,17 +21,17 @@ public interface NioTcpProtocol extends Closeable {
 
     void handleWrite(SelectionKey selectionKey) throws IOException;
 
-    /**
-     * Validates the given NIO context.
-     *
-     * @param ctx
-     * @return true if valid, false if not. Invalid context leads to closing socket channel and cancelling selection key
-     * @throws IOException
-     */
-    boolean validateContext(NioContext ctx) throws IOException;
-
     interface Server extends NioTcpProtocol {
         void handleAccept(SelectionKey selectionKey) throws IOException;
+
+        /**
+         * Validates the given NIO context.
+         *
+         * @param ctx
+         * @return true if valid, false if not. Invalid context leads to closing socket channel and cancelling selection key
+         * @throws IOException
+         */
+        boolean validateContext(NioContext ctx) throws IOException;
     }
 
     interface Client extends NioTcpProtocol {

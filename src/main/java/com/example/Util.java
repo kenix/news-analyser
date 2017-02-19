@@ -196,7 +196,7 @@ public final class Util {
 
     public static void close(String id, AtomicBoolean flag, CountDownLatch latch, Closeable... resources) {
         if (latch.getCount() == 0) { // already in shutdown process
-            Util.warn("<Util> in closing %s", id);
+            Util.warn("<Util> closed %s", id);
             return;
         }
 
@@ -209,7 +209,10 @@ public final class Util {
             Thread.currentThread().interrupt();
         }
 
-        Arrays.stream(resources).forEach(Util::close);
+        if (resources != null) {
+            Arrays.stream(resources).forEach(Util::close);
+        }
+
         Util.info("<Util> closed %s", id);
     }
 }

@@ -3,7 +3,7 @@
 */
 package com.example.nio.handler;
 
-import com.example.Util;
+import com.example.nio.NioContext;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -16,8 +16,6 @@ import java.util.function.Consumer;
  */
 public class WriteHandler implements Handler<SelectionKey, IOException> {
 
-    private final ByteBuffer buf = ByteBuffer.allocateDirect(Util.DEFAULT_BUF_LENGTH);
-
     private final Consumer<ByteBuffer> consumer;
 
     public WriteHandler(Consumer<ByteBuffer> consumer) {
@@ -26,13 +24,15 @@ public class WriteHandler implements Handler<SelectionKey, IOException> {
 
     @Override
     public void handle(SelectionKey key) throws IOException {
-        this.consumer.accept(this.buf);
-        this.buf.flip();
+        final ByteBuffer buffer = ((NioContext) key.attachment()).getWriteBuffer();
+        this.consumer.accept(buffer);
+
+        buffer.flip();
         final SocketChannel sc = (SocketChannel) key.channel();
-        if (this.buf.hasRemaining()) {
-            sc.write(this.buf);
+        if (buffer.hasRemaining()) {
+            sc.write(buffer);
         }
-        this.buf.compact();
+        buffer.compact();
 
         key.interestOps(SelectionKey.OP_WRITE);
     }

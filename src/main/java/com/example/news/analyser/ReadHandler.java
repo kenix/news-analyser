@@ -28,7 +28,7 @@ public class ReadHandler implements Handler<SelectionKey, IOException> {
         final SocketChannel sc = (SocketChannel) key.channel();
         final NioContext nioContext = (NioContext) key.attachment();
 
-        final ByteBuffer buf = nioContext.getBuffer();
+        final ByteBuffer buf = nioContext.getReadBuffer();
         int read = sc.read(buf);
         if (read == -1) { // channel end
             nioContext.endReadStream();

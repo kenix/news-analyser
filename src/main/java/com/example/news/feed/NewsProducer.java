@@ -8,7 +8,6 @@ import com.example.news.domain.News;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
-import java.util.concurrent.BlockingQueue;
 import java.util.function.Supplier;
 
 /**
@@ -16,14 +15,14 @@ import java.util.function.Supplier;
  */
 class NewsProducer implements Runnable {
 
-    private final BlockingQueue<byte[]> queue;
+    private final NewsBroker newsBroker;
 
     private final Supplier<News> supplier;
 
     private final ByteBuffer buffer;
 
-    NewsProducer(BlockingQueue<byte[]> queue, Supplier<News> supplier) {
-        this.queue = queue;
+    NewsProducer(NewsBroker newsBroker, Supplier<News> supplier) {
+        this.newsBroker = newsBroker;
         this.supplier = supplier;
         this.buffer = ByteBuffer.allocate(Util.MAX_NEWS_LENGTH);
     }
@@ -36,9 +35,9 @@ class NewsProducer implements Runnable {
         this.buffer.flip();
         try {
             // blocking if queue is full
-            this.queue.put(Arrays.copyOfRange(this.buffer.array(), 0, this.buffer.limit()));
+            this.newsBroker.put(Arrays.copyOfRange(this.buffer.array(), 0, this.buffer.limit()));
         } catch (InterruptedException e) {
-            Util.warn("producing news interrupted, %s", e.getMessage());
+            Util.warn("producing news interrupted");
             Thread.currentThread().interrupt();
         } finally {
             this.buffer.clear();
