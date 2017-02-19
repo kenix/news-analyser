@@ -42,6 +42,8 @@ public class NioTcpServer implements Closeable {
 
     private Selector selector;
 
+    private ServerSocketChannel serverSocketChannel;
+
     public NioTcpServer(int port, NioTcpProtocol.Server protocol) {
         this.port = port;
         this.protocol = protocol;
@@ -53,10 +55,10 @@ public class NioTcpServer implements Closeable {
         try {
             this.selector = Selector.open();
 
-            final ServerSocketChannel ssc = ServerSocketChannel.open();
-            ssc.bind(new InetSocketAddress(this.port));
-            ssc.configureBlocking(false);
-            ssc.register(this.selector, SelectionKey.OP_ACCEPT);
+            this.serverSocketChannel = ServerSocketChannel.open();
+            this.serverSocketChannel.bind(new InetSocketAddress(this.port));
+            this.serverSocketChannel.configureBlocking(false);
+            this.serverSocketChannel.register(this.selector, SelectionKey.OP_ACCEPT);
 
             this.protocol.start();
             Util.info("<NioTcpServer> listening on %d", this.port);
@@ -92,33 +94,23 @@ public class NioTcpServer implements Closeable {
                 cancelInactiveClients(this.selector.keys());
             }
         } finally {
+            closeAllClients(this.selector.keys());
             this.closeLatch.countDown();
         }
     }
 
-    @Override
-    public void close() throws IOException {
-        if (this.closeLatch.getCount() == 0) { // already in shutdown process
-            Util.warn("<NioTcpServer> in closing");
-            return;
-        }
-
-        this.shutdown.set(true);
-        Util.info("<NioTcpServer> closing");
-        try {
-            this.closeLatch.await(5000, TimeUnit.MILLISECONDS);
-        } catch (InterruptedException e) {
-            Util.warn("<NioTcpServer> waiting for end of protocol handling interrupted");
-            Thread.currentThread().interrupt();
-        }
-
-        closeResource();
-        Util.info("<NioTcpServer> closed");
+    private static void closeAllClients(Set<SelectionKey> keys) {
+        keys.forEach(k -> {
+            if (k.channel() instanceof SocketChannel) {
+                Util.close(k.channel());
+            }
+        });
     }
 
-    private void closeResource() {
-        Util.close(this.selector);
-        Util.close(this.protocol);
+    @Override
+    public void close() throws IOException {
+        Util.close(this.serverSocketChannel); // stop accepting new connections
+        Util.close("NioTcpServer", this.shutdown, this.closeLatch, this.selector, this.protocol);
     }
 
     private static void updateSelectionTs(SelectionKey key) {

@@ -10,10 +10,13 @@ import java.nio.ByteBuffer;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @author zzhao
@@ -39,7 +42,7 @@ public final class Util {
         try {
             closeable.close();
         } catch (Exception e) {
-            error("failed closing resource %s", e.getMessage());
+            error("error closing %s", closeable);
             e.printStackTrace(System.err);
         }
     }
@@ -189,5 +192,24 @@ public final class Util {
                 Thread.currentThread().interrupt();
             }
         }
+    }
+
+    public static void close(String id, AtomicBoolean flag, CountDownLatch latch, Closeable... resources) {
+        if (latch.getCount() == 0) { // already in shutdown process
+            Util.warn("<Util> in closing %s", id);
+            return;
+        }
+
+        flag.set(true);
+        Util.info("<Util> closing %s", id);
+        try {
+            latch.await(5000, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException e) {
+            Util.warn("<Util> waiting for latch interrupted %s", id);
+            Thread.currentThread().interrupt();
+        }
+
+        Arrays.stream(resources).forEach(Util::close);
+        Util.info("<Util> closed %s", id);
     }
 }
