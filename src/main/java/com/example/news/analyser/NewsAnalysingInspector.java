@@ -29,13 +29,13 @@ class NewsAnalysingInspector implements Consumer<News>, Closeable {
 
     private final AtomicReference<InspectorContext> contextRef;
 
-    private InspectorContext contextForExchange;
-
-    private ScheduledExecutorService scheduler;
-
     private final ReentrantReadWriteLock.ReadLock readLock;
 
     private final ReentrantReadWriteLock.WriteLock writeLock;
+
+    private InspectorContext contextForExchange;
+
+    private ScheduledExecutorService scheduler;
 
     NewsAnalysingInspector(int numOfTopNewsToKeep) {
         this.contextRef = new AtomicReference<>(new InspectorContext(numOfTopNewsToKeep));
@@ -107,7 +107,7 @@ class NewsAnalysingInspector implements Consumer<News>, Closeable {
 
     @Override
     public void close() throws IOException {
-        Util.shutdownAndAwaitTermination(this.scheduler, 5);
+        Util.shutdownAndAwaitTermination(this.scheduler, "news-inspector", 1);
     }
 
     static class InspectorContext implements Consumer<News> {

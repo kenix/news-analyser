@@ -36,6 +36,6 @@ class NewsFeed implements Closeable {
 
     @Override
     public void close() throws IOException {
-        Util.shutdownAndAwaitTermination(this.scheduler, 5);
+        Util.shutdownAndAwaitTermination(this.scheduler, "news-feed", 5);
     }
 }

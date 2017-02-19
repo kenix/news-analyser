@@ -14,6 +14,7 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -37,59 +38,85 @@ public class NioTcpServer implements Closeable {
 
     private final AtomicBoolean shutdown;
 
+    private final CountDownLatch closeLatch;
+
     private Selector selector;
 
-    public NioTcpServer(int port, NioTcpProtocol.Server protocol, AtomicBoolean shutdown) {
+    public NioTcpServer(int port, NioTcpProtocol.Server protocol) {
         this.port = port;
         this.protocol = protocol;
-        this.shutdown = shutdown;
+        this.shutdown = new AtomicBoolean(false);
+        this.closeLatch = new CountDownLatch(1);
     }
 
     public void start() throws IOException {
-        this.selector = Selector.open();
+        try {
+            this.selector = Selector.open();
 
-        final ServerSocketChannel ssc = ServerSocketChannel.open();
-        ssc.bind(new InetSocketAddress(this.port));
-        ssc.configureBlocking(false);
-        ssc.register(this.selector, SelectionKey.OP_ACCEPT);
+            final ServerSocketChannel ssc = ServerSocketChannel.open();
+            ssc.bind(new InetSocketAddress(this.port));
+            ssc.configureBlocking(false);
+            ssc.register(this.selector, SelectionKey.OP_ACCEPT);
 
-        this.protocol.start();
-        Util.info("<NioTcpServer> listening on %d", this.port);
+            this.protocol.start();
+            Util.info("<NioTcpServer> listening on %d", this.port);
 
-        while (!this.shutdown.get()) {
-            if (this.selector.select(5000) == 0) {
-                continue;
-            }
-
-            final Set<SelectionKey> keys = this.selector.selectedKeys();
-            for (Iterator<SelectionKey> it = keys.iterator(); it.hasNext(); ) {
-                final SelectionKey key = it.next();
-                it.remove();
-                if (!key.isValid()) {
+            while (!this.shutdown.get()) {
+                if (this.selector.select(5000) == 0) {
                     continue;
                 }
 
-                updateSelectionTs(key); // update timestamp of client activity
+                final Set<SelectionKey> keys = this.selector.selectedKeys();
+                for (Iterator<SelectionKey> it = keys.iterator(); it.hasNext(); ) {
+                    final SelectionKey key = it.next();
+                    it.remove();
+                    if (!key.isValid()) {
+                        continue;
+                    }
 
-                if (key.isAcceptable()) {
-                    this.protocol.handleAccept(key);
+                    updateSelectionTs(key); // update timestamp of client activity
+
+                    if (key.isAcceptable()) {
+                        this.protocol.handleAccept(key);
+                    }
+
+                    if (key.isReadable()) {
+                        this.protocol.handleRead(key);
+                    }
+
+                    if (key.isWritable()) {
+                        this.protocol.handleWrite(key);
+                    }
                 }
 
-                if (key.isReadable()) {
-                    this.protocol.handleRead(key);
-                }
-
-                if (key.isWritable()) {
-                    this.protocol.handleWrite(key);
-                }
+                cancelInactiveClients(this.selector.keys());
             }
-
-            cancelInactiveClients(this.selector.keys());
+        } finally {
+            this.closeLatch.countDown();
         }
     }
 
     @Override
     public void close() throws IOException {
+        if (this.closeLatch.getCount() == 0) { // already in shutdown process
+            Util.warn("<NioTcpServer> in closing");
+            return;
+        }
+
+        this.shutdown.set(true);
+        Util.info("<NioTcpServer> closing");
+        try {
+            this.closeLatch.await(5000, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException e) {
+            Util.warn("<NioTcpServer> waiting for end of protocol handling interrupted");
+            Thread.currentThread().interrupt();
+        }
+
+        closeResource();
+        Util.info("<NioTcpServer> closed");
+    }
+
+    private void closeResource() {
         Util.close(this.selector);
         Util.close(this.protocol);
     }

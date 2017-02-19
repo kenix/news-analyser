@@ -75,7 +75,7 @@ public class NewsAnalyser implements NioTcpProtocol.Server {
 
     @Override
     public void close() throws IOException {
-        Util.shutdownAndAwaitTermination(this.executorService, 5);
+        Util.shutdownAndAwaitTermination(this.executorService, "news-analyser", 5);
         this.inspector.close();
     }
 }

@@ -5,8 +5,6 @@ package com.example.news.analyser;
 
 import com.example.nio.NioTcpServer;
 
-import java.util.concurrent.atomic.AtomicBoolean;
-
 import static com.example.Util.getIntConfig;
 
 /**
@@ -20,13 +18,18 @@ public class NewsReceiver {
             System.exit(1);
         }
 
-        final int port = Integer.parseInt(args[0]);
-        try (
-                final NioTcpServer server = new NioTcpServer(port,
-                        new NewsAnalyser(getIntConfig("numberOfWorkers", 5)),
-                        new AtomicBoolean(false)) // TODO register JMX method to shutdown server cleanly
-        ) {
-            server.start();
-        }
+        final NioTcpServer server = new NioTcpServer(Integer.parseInt(args[0]),
+                new NewsAnalyser(getIntConfig("numberOfWorkers", 5)));
+
+        // TODO register JMX method to shutdown server cleanly
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            try {
+                server.close();
+            } catch (Exception e) {
+                throw new IllegalStateException("error during closing server", e);
+            }
+        }));
+
+        server.start();
     }
 }

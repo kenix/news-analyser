@@ -170,7 +170,7 @@ public final class Util {
         return 0xFF & b;
     }
 
-    public static void shutdownAndAwaitTermination(ExecutorService es, int timeoutSeconds) {
+    public static void shutdownAndAwaitTermination(ExecutorService es, String id, int timeoutSeconds) {
         if (es != null) {
             es.shutdown(); // disable new tasks from being submitted
             try {
@@ -179,12 +179,12 @@ public final class Util {
                     es.shutdownNow(); // cancel currently executing tasks
                     // wait for tasks to respond to being cancelled
                     if (!es.awaitTermination(timeoutSeconds, TimeUnit.SECONDS)) {
-                        warn("<shutdownAndAwaitTermination> executor service did not terminate");
+                        warn("<shutdownAndAwaitTermination> executor did not terminate [%s]", id);
                     }
                 }
-                info("<shutdownAndAwaitTermination> executor service stopped");
+                info("<shutdownAndAwaitTermination> executor stopped [%s]", id);
             } catch (InterruptedException e) {
-                warn("<shutdownAndAwaitTermination> terminating executor service interrupted", e);
+                warn("<shutdownAndAwaitTermination> terminating executor interrupted [%s]", id);
                 es.shutdownNow();
                 Thread.currentThread().interrupt();
             }

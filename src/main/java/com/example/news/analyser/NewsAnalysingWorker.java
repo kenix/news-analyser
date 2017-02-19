@@ -33,14 +33,14 @@ class NewsAnalysingWorker implements Runnable {
 
     @Override
     public void run() {
-        while (true) {
+        while (!Thread.currentThread().isInterrupted()) {
             try {
                 final News news = this.newsBroker.poll(1000, TimeUnit.MILLISECONDS);
                 if (news != null && isPositiveNews(news)) {
                     this.consumer.accept(news);
                 }
             } catch (InterruptedException e) {
-                Util.warn("<NewsAnalysingWorker> analysing interrupted %s", e.getMessage());
+                Util.warn("<NewsAnalysingWorker> analysing interrupted");
                 Thread.currentThread().interrupt();
             }
         }
