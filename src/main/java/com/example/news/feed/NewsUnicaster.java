@@ -3,6 +3,7 @@
 */
 package com.example.news.feed;
 
+import com.example.Util;
 import com.example.nio.NioTcpClient;
 
 import static com.example.Util.getIntConfig;
@@ -22,6 +23,7 @@ public class NewsUnicaster {
                 final NioTcpClient client = new NioTcpClient(args[0], Integer.parseInt(args[1]),
                         new NewsFeed(getIntConfig("newsProducingRateInMillis", 1000)))
         ) {
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> Util.close(client), "shutdown-hook"));
             client.start();
         }
     }

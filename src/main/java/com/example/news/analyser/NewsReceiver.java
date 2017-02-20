@@ -19,11 +19,12 @@ public class NewsReceiver {
             System.exit(1);
         }
 
-        final NioTcpServer server = new NioTcpServer(Integer.parseInt(args[0]),
-                new NewsAnalyser(getIntConfig("numberOfWorkers", 5)));
-
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> Util.close(server)));
-
-        server.start();
+        try (
+                final NioTcpServer server = new NioTcpServer(Integer.parseInt(args[0]),
+                        new NewsAnalyser(getIntConfig("numberOfWorkers", 5)));
+        ) {
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> Util.close(server), "shutdown-hook"));
+            server.start();
+        }
     }
 }

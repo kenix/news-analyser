@@ -64,6 +64,8 @@ public class NioTcpServer implements Closeable {
             Util.info("<NioTcpServer> listening on %d", this.port);
 
             while (!this.shutdown.get()) {
+                cancelInactiveClients(this.selector.keys()); // close inactive clients
+
                 if (this.selector.select(5000) == 0) {
                     continue;
                 }
@@ -90,8 +92,6 @@ public class NioTcpServer implements Closeable {
                         this.protocol.handleWrite(key);
                     }
                 }
-
-                cancelInactiveClients(this.selector.keys());
             }
         } finally {
             closeAllClients(this.selector.keys());
@@ -146,7 +146,7 @@ public class NioTcpServer implements Closeable {
     }
 
     private static void closeChannelCancelKey(SelectionKey key, SocketChannel sc) {
-        Util.close(sc);
         key.cancel();
+        Util.close(sc);
     }
 }
