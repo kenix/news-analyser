@@ -23,6 +23,8 @@
 - [ ] pool news, bytes or use Unsafe (off-heap) to reduce GC stress 
 - [ ] concurrent tests
 - [ ] introduce selector thread, so that protocol implementation won't accidentally block main thread
+- [ ] enable protocol implementation using event model
+- [ ] abstract message framer and encoder
 
 ###Task description
 The task involves the development of two separate Java SE 8 programs: a "mock news feed" and a "news analyser". Several instances of the mock news feed will be run simultaneously, each connecting to the same news analyser.
