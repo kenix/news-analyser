@@ -32,10 +32,10 @@ public class ConnectionHandler implements Handler<SelectionKey, IOException> {
         final SocketChannel sc = (SocketChannel) key.channel();
         if (sc.finishConnect()) {
             Util.info("<ConnectionHandler> connected to %s", sc.getRemoteAddress());
-            this.consumer.accept(sc.getLocalAddress());
             final NioContext nioContext = this.supplier.get();
             key.interestOps(nioContext.getInterestOps());
             key.attach(nioContext);
+            this.consumer.accept(sc.getLocalAddress());
         }
     }
 }

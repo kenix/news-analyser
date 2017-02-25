@@ -38,7 +38,6 @@ public class ReadHandler implements Handler<SelectionKey, IOException> {
         if (read > 0) {
             this.consumer.accept(buf);
         }
-
-        key.interestOps(SelectionKey.OP_READ);
+        // for news analyser always interested in reading news
     }
 }

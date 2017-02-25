@@ -1,9 +1,10 @@
 /*
 * Created at 23:32 on 11/02/2017
 */
-package com.example.nio.handler;
+package com.example.news.feed;
 
 import com.example.nio.NioContext;
+import com.example.nio.handler.Handler;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -33,7 +34,6 @@ public class WriteHandler implements Handler<SelectionKey, IOException> {
             sc.write(buffer);
         }
         buffer.compact();
-
-        key.interestOps(SelectionKey.OP_WRITE);
+        // for news feed always interested in writing news
     }
 }

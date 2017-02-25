@@ -9,7 +9,6 @@ import com.example.nio.NioTcpProtocol;
 import com.example.nio.handler.ConnectionHandler;
 import com.example.nio.handler.ExceptionHandler;
 import com.example.nio.handler.Handler;
-import com.example.nio.handler.WriteHandler;
 
 import java.io.IOException;
 import java.nio.channels.SelectionKey;
