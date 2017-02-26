@@ -5,9 +5,8 @@ package com.example.news.feed;
 
 import com.example.Util;
 import com.example.news.domain.News;
+import com.example.news.domain.NewsCoder;
 
-import java.nio.ByteBuffer;
-import java.util.Arrays;
 import java.util.function.Supplier;
 
 /**
@@ -15,32 +14,28 @@ import java.util.function.Supplier;
  */
 class NewsProducer implements Runnable {
 
+    private final static NewsCoder coder = new NewsCoder();
+
     private final NewsBroker newsBroker;
 
     private final Supplier<News> supplier;
 
-    private final ByteBuffer buffer;
-
     NewsProducer(NewsBroker newsBroker, Supplier<News> supplier) {
         this.newsBroker = newsBroker;
         this.supplier = supplier;
-        this.buffer = ByteBuffer.allocate(Util.MAX_NEWS_LENGTH);
     }
 
     @Override
     public void run() {
         final News news = this.supplier.get();
         Util.debug("produced %s", news);
-        Util.encodeNews(this.buffer, news);
-        this.buffer.flip();
+        final byte[] encodedNews = coder.encode(news);
         try {
             // blocking if queue is full
-            this.newsBroker.put(Arrays.copyOfRange(this.buffer.array(), 0, this.buffer.limit()));
+            this.newsBroker.put(encodedNews);
         } catch (InterruptedException e) {
             Util.warn("producing news interrupted");
             Thread.currentThread().interrupt();
-        } finally {
-            this.buffer.clear();
         }
     }
 }
