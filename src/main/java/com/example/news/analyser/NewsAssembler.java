@@ -31,7 +31,7 @@ class NewsAssembler implements Consumer<ByteBuffer> {
         byteBuffer.flip();
         Optional<ByteBuffer> data;
         do {
-            data = framer.deframeMessage(byteBuffer);
+            data = framer.fromWire(byteBuffer);
             data.map(coder::decode).ifPresent(this.consumer);
         } while (data.isPresent());
         byteBuffer.compact();

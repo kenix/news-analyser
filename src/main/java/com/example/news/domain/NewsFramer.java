@@ -19,7 +19,7 @@ import java.util.Optional;
 public class NewsFramer implements MessageFramer {
 
     @Override
-    public int frameMessage(ByteBuffer buffer, byte[] msg) {
+    public int toWire(ByteBuffer buffer, byte[] msg) {
         if (buffer.remaining() < msg.length + 1) {
             return 0;
         }
@@ -28,7 +28,7 @@ public class NewsFramer implements MessageFramer {
     }
 
     @Override
-    public Optional<ByteBuffer> deframeMessage(ByteBuffer buffer) {
+    public Optional<ByteBuffer> fromWire(ByteBuffer buffer) {
         if (!buffer.hasRemaining()) {
             return Optional.empty();
         }

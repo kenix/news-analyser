@@ -30,7 +30,7 @@ class NewsBroker implements Consumer<ByteBuffer> {
         do {
             bytes = this.queue.peek();
             if (bytes != null) {
-                len = framer.frameMessage(buf, bytes);
+                len = framer.toWire(buf, bytes);
                 if (len > 0) {
                     this.queue.remove();
                 }

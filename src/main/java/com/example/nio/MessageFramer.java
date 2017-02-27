@@ -7,6 +7,8 @@ import java.nio.ByteBuffer;
 import java.util.Optional;
 
 /**
+ * Frames message to and from wire, can optionally employ encryption a/o compression.
+ *
  * @author zzhao
  */
 public interface MessageFramer {
@@ -19,7 +21,13 @@ public interface MessageFramer {
      * @return the total bytes used for framing the given message. 0 if the given message cannot be framed into
      * the given buffer.
      */
-    int frameMessage(ByteBuffer buffer, byte[] msg);
+    int toWire(ByteBuffer buffer, byte[] msg);
 
-    Optional<ByteBuffer> deframeMessage(ByteBuffer buffer);
+    /**
+     * Frames message from wire if possible.
+     *
+     * @param buffer
+     * @return
+     */
+    Optional<ByteBuffer> fromWire(ByteBuffer buffer);
 }
